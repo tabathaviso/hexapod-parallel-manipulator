@@ -8,7 +8,7 @@ function p = FK(p0, lg)
 Rm = 250/2; 
 Rf = 650/2; 
 alpha = 40*pi/180;
-beta = 80*pi/180;
+beta = 85*pi/180;
 
 %% initial guess
 p0 = [0 0 100 0 0 0]';
