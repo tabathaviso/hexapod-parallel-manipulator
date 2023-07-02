@@ -15,7 +15,7 @@ c = pose(6)*pi/180;
 Rm = 250/2; % moving platform radius in mm
 Rf = 650/2; % fixed platform radius in mm
 alpha = 40*pi/180;
-beta = 80*pi/180;
+beta = 85*pi/180;
 
 % rotation matrices
 Rxa = [1, 0, 0; 0, cos(a), -sin(a); 0, sin(a), cos(a)];
