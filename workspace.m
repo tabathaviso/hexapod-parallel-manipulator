@@ -1,55 +1,72 @@
+% TABATHA VISO - RBE521 - LEGGED ROBOTICS
+% Finds points within the workspace of a kinematic parallel manipulator
+% Considering only Z=800mm, horizontal top platform a=b=c=0
 
-syms X Y
+function [meshPoints] = workspace(u_nom, s_nom, z)
 
-% nominal values of kinematic parameters in mm
-u_nom = [305.4001, -56.4357, -248.9644, -248.9644, -56.4357, 305.4001;...
-         111.1565, 320.0625, 208.9060, -208.9060, -320.0625, -111.1565];
-s_nom = [92.1597, 27.055, -119.2146, -119.2146, 27.055, 92.1597;...
-         84.4488, 122.037, 37.58822, -37.5882, -122.037, -84.4488];
-lo_nom = [604.8652, 604.8652, 604.8652, 604.8652, 604.8652, 604.8652];
+syms X Y Z
 
-% real values of kinematic parameters in mm
-u_real = [305.2599, -55.2814, -244.7954, -252.5755, -53.9678, 302.4266;...
-         115.0695, 322.9819, 208.0087, -211.8783, -320.6115, -109.4351];
-s_real = [96.6610, 22.2476, -122.4519, -120.6859, 24.7769, 91.3462;...
-         81.7602, 125.2511, 36.6453, -34.4565, -125.0489, -80.9866];
-lo_real = [604.4299, 607.2473, 600.4441, 605.9031, 604.5251, 600.0616];
+% leg length limits in mm
+l_min = 604.8652;
+l_max = 1100;
 
-% define sphere centerpoints
+% define sphere centerpoints and radii (ignoring z values) 
 spheres = u_nom - s_nom;
+r = l_max;
 
-radii = 123456789;
+% create circle equations at z=800 height
+circles = arrayfun(@(i) (X - spheres(1,i)).^2 + (Y - spheres(2,i)).^2 + (z - spheres(3,i))^2 - r^2, 1:size(spheres,2), 'UniformOutput', false);
 
+% search range, only looking at every 5mm to save computating time
+range = -1000:5:1000;
+meshPoints = [];
 
-% find where the spheres intersect and define the workspace
-intersection_points=[];
+for x = range
+    for y = range
+        isInWorkspace = false;
 
-for i = 1:5
-    eq1 = (X-spheres(1,i))^2 + (Y-spheres(2,i))^2;
-    eq2 = (X-spheres(1,i+1))^2 + (Y-spheres(2,i+1))^2;
-    [x,y] = vpasolve([eq1 == (radii)^2, eq2 == (radii)^2],[X,Y]);
-    intersection_points = vertcat(intersection_points,[x,y]);
-end
+        % check if point is in the workspace (i.e., in every circle)
+        if (x - spheres(1,1))^2 + (y - spheres(2,1))^2 + (z - spheres(3,1))^2 - r^2 <= 0
+            if (x - spheres(1,2))^2 + (y - spheres(2,2))^2 + (z - spheres(3,1))^2 - r^2 <= 0
+                if (x - spheres(1,3))^2 + (y - spheres(2,3))^2 + (z - spheres(3,1))^2 - r^2 <= 0
+                    if (x - spheres(1,4))^2 + (y - spheres(2,4))^2 + (z - spheres(3,1))^2 - r^2 <= 0
+                        if (x - spheres(1,5))^2 + (y - spheres(2,5))^2 + (z - spheres(3,1))^2 - r^2 <= 0
+                            if (x - spheres(1,6))^2 + (y - spheres(2,6))^2 + (z - spheres(3,1))^2 - r^2 <= 0
+                                isInWorkspace = true;
+                            end
+                        end
+                    end
+                end
+            end
+        end
 
-eq1 = (X-spheres(1,1))^2 + (Y-spheres(2,1))^2; 
-eq2 = (X-spheres(1,6))^2 + (Y-spheres(2,6))^2;
-[x,y] = vpasolve([eq1 == (radii)^2, eq2 == (radii)^2],[X,Y]);
-intersection_points = vertcat(intersection_points,[x,y]);
-intersection_points = double(intersection_points);
-
-% only collect the points within the workspace
-workspace_points = [];
-num = size(intersection_points);
-
-for i = 1:num
-    count = 0;
-    for j = 1:6
-        if (intersection_points(i,1)-spheres(1,j))^2 + (intersection_points(i,2)-spheres(2,j))^2 <= radii^2
-            count = count+1;
+        % save workspace points in this list
+        if isInWorkspace
+            meshPoints = [meshPoints; x, y];
         end
     end
-    if count >= 6
-        workspace_points = vertcat(workspace_points,[intersection_points(i,1),intersection_points(i,2)]);
-    end
 end
+
+% show me how many workspace points I found
+fprintf('There are %d points in the workspace.\n', size(meshPoints,1));
+
+% add constant z value to workspace points, as well as angles
+meshPoints(:,end+1) = z; 
+meshPoints(:,end+1:end+3) = 0;
+
+% plot
+figure;
+hold on;
+%scatter(u_nom(1,:), u_nom(2,:), 'r', 'DisplayName', 'u\_nom', 'Marker', 'o', 'LineWidth', 1.5);
+%scatter(s_nom(1,:), s_nom(2,:), 'b', 'DisplayName', 's\_nom', 'Marker', 'x', 'LineWidth', 1.5);
+%scatter(spheres(1,:), spheres(2,:), 'g', 'DisplayName', 'centerpoints', 'Marker', 's', 'LineWidth', 1.5);
+cellfun(@(circle) fimplicit(circle, 'LineWidth', 1), circles);
+scatter(meshPoints(:,1),meshPoints(:,2));
+hold off;
+axis equal;
+xlim([-1000, 1000]);
+ylim([-1000, 1000]);
+xlabel('X (mm)');
+ylabel('Y (mm)');
+title('Workspace at z=800mm');
 

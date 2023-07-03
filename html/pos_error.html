@@ -1,0 +1,201 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>pos_error</title><meta name="generator" content="MATLAB 9.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2023-07-02"><meta name="DC.source" content="pos_error.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% TABATHA VISO - RBE521 - LEGGED ROBOTICS</span>
+<span class="comment">% Finds pose error of parallel manipulator at Z=constant value</span>
+
+<span class="comment">% nominal values of kinematic parameters in mm</span>
+u_nom = [305.4001, -56.4357, -248.9644, -248.9644, -56.4357, 305.4001;<span class="keyword">...</span>
+         111.1565, 320.0625, 208.9060, -208.9060, -320.0625, -111.1565;<span class="keyword">...</span>
+         0,0,0,0,0,0];
+s_nom = [92.1597, 27.055, -119.2146, -119.2146, 27.055, 92.1597;<span class="keyword">...</span>
+         84.4488, 122.037, 37.58822, -37.5882, -122.037, -84.4488;<span class="keyword">...</span>
+         0,0,0,0,0,0];
+lo_nom = [604.8652, 604.8652, 604.8652, 604.8652, 604.8652, 604.8652];
+
+<span class="comment">% real values of kinematic parameters in mm</span>
+u_real = [305.2599, -55.2814, -244.7954, -252.5755, -53.9678, 302.4266;<span class="keyword">...</span>
+         115.0695, 322.9819, 208.0087, -211.8783, -320.6115, -109.4351;<span class="keyword">...</span>
+         2.6210, 4.2181, 3.9365, -3.0128, 4.3181, 3.3812];
+s_real = [96.6610, 22.2476, -122.4519, -120.6859, 24.7769, 91.3462;<span class="keyword">...</span>
+         81.7602, 125.2511, 36.6453, -34.4565, -125.0489, -80.9866;<span class="keyword">...</span>
+         1.0684, -0.5530, 4.3547, -4.9014, -4.8473, 0.2515];
+lo_real = [604.4299, 607.2473, 600.4441, 605.9031, 604.5251, 600.0616];
+
+delta_u = u_nom - u_real;
+delta_s = s_nom - s_real;
+delta_lo = lo_nom - lo_real;
+
+delta_rho_i = [delta_s; delta_u; delta_lo]; <span class="comment">%each column per leg</span>
+delta_rho_42 = reshape(delta_rho_i, 42, 1); <span class="comment">%all one row vector for error calcs</span>
+
+<span class="comment">% find all positions in the workspace at Z=800mm and plots workspace</span>
+list_of_configs = workspace(u_nom, s_nom, 800);
+delta_P = [];
+e = [];
+
+<span class="comment">% for each position in the workspace, calculate position error and rss</span>
+<span class="keyword">for</span> i = 1:size(list_of_configs,1)
+    Jv = jacobianV(list_of_configs(i,:)');
+    Jrho = jacobianRho(list_of_configs(i,:)');
+
+    delta_P(:,i) = -pinv(Jv)*Jrho*delta_rho_42;
+    e(:,i) = sqrt(delta_P(1,i)^2+delta_P(2,i)^2+delta_P(3,i)^2); <span class="comment">% rss</span>
+<span class="keyword">end</span>
+
+<span class="comment">% plots position error in 3D</span>
+
+x_values = list_of_configs(:,1);
+y_values = list_of_configs(:,2);
+z_values = e(:);
+grid <span class="string">on</span>;
+x_plot = linspace(min(x_values),max(x_values),1000);
+y_plot = linspace(min(y_values),max(y_values),1000);
+[X,Y] = meshgrid(x_plot, y_plot);
+Z = griddata(x_values,y_values,z_values,X,Y);
+figure
+surf(X,Y,Z);
+xlabel(<span class="string">'X (mm)'</span>);
+ylabel(<span class="string">'Y (mm)'</span>);
+zlabel(<span class="string">'Pose Error (mm)'</span>);
+title(<span class="string">'Pose Error at z=800mm'</span>);
+grid <span class="string">on</span>;
+view(45,30)
+shading <span class="string">interp</span>;
+
+fprintf(<span class="string">'The average position error (RSS) is %d mm.\n'</span>, mean(e))
+</pre><pre class="codeoutput">There are 39376 points in the workspace.
+The average position error (RSS) is 4.762552e+01 mm.
+</pre><img vspace="5" hspace="5" src="pos_error_01.png" alt=""> <img vspace="5" hspace="5" src="pos_error_02.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% TABATHA VISO - RBE521 - LEGGED ROBOTICS
+% Finds pose error of parallel manipulator at Z=constant value
+
+% nominal values of kinematic parameters in mm 
+u_nom = [305.4001, -56.4357, -248.9644, -248.9644, -56.4357, 305.4001;...
+         111.1565, 320.0625, 208.9060, -208.9060, -320.0625, -111.1565;...
+         0,0,0,0,0,0];
+s_nom = [92.1597, 27.055, -119.2146, -119.2146, 27.055, 92.1597;...
+         84.4488, 122.037, 37.58822, -37.5882, -122.037, -84.4488;...
+         0,0,0,0,0,0];
+lo_nom = [604.8652, 604.8652, 604.8652, 604.8652, 604.8652, 604.8652];
+
+% real values of kinematic parameters in mm
+u_real = [305.2599, -55.2814, -244.7954, -252.5755, -53.9678, 302.4266;...
+         115.0695, 322.9819, 208.0087, -211.8783, -320.6115, -109.4351;...
+         2.6210, 4.2181, 3.9365, -3.0128, 4.3181, 3.3812];
+s_real = [96.6610, 22.2476, -122.4519, -120.6859, 24.7769, 91.3462;...
+         81.7602, 125.2511, 36.6453, -34.4565, -125.0489, -80.9866;...
+         1.0684, -0.5530, 4.3547, -4.9014, -4.8473, 0.2515];
+lo_real = [604.4299, 607.2473, 600.4441, 605.9031, 604.5251, 600.0616];
+
+delta_u = u_nom - u_real;
+delta_s = s_nom - s_real;
+delta_lo = lo_nom - lo_real;
+
+delta_rho_i = [delta_s; delta_u; delta_lo]; %each column per leg
+delta_rho_42 = reshape(delta_rho_i, 42, 1); %all one row vector for error calcs
+
+% find all positions in the workspace at Z=800mm and plots workspace
+list_of_configs = workspace(u_nom, s_nom, 800);
+delta_P = [];
+e = [];
+
+% for each position in the workspace, calculate position error and rss
+for i = 1:size(list_of_configs,1)
+    Jv = jacobianV(list_of_configs(i,:)');
+    Jrho = jacobianRho(list_of_configs(i,:)');
+
+    delta_P(:,i) = -pinv(Jv)*Jrho*delta_rho_42;
+    e(:,i) = sqrt(delta_P(1,i)^2+delta_P(2,i)^2+delta_P(3,i)^2); % rss
+end
+
+% plots position error in 3D
+
+x_values = list_of_configs(:,1);
+y_values = list_of_configs(:,2);
+z_values = e(:);
+grid on;
+x_plot = linspace(min(x_values),max(x_values),1000);
+y_plot = linspace(min(y_values),max(y_values),1000);
+[X,Y] = meshgrid(x_plot, y_plot);
+Z = griddata(x_values,y_values,z_values,X,Y);
+figure
+surf(X,Y,Z);
+xlabel('X (mm)');
+ylabel('Y (mm)');
+zlabel('Pose Error (mm)');
+title('Pose Error at z=800mm');
+grid on;
+view(45,30)
+shading interp;
+
+fprintf('The average position error (RSS) is %d mm.\n', mean(e))
+##### SOURCE END #####
+--></body></html>
