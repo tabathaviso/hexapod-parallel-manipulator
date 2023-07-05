@@ -44,7 +44,9 @@ if nargin < 2 % if the s and u matriced were not provided, calculate
     u5 = [-Rf*cos(pi/3+alpha/2), -Rf*sin(pi/3+alpha/2), 0]';
     u6 = [Rf*cos(alpha/2), -Rf*sin(alpha/2), 0]';
     u = [u1 u2 u3 u4 u5 u6];
-end % else, use provided matrices
+else
+    s = s;
+    u = u;
 
 %sphere_centers = u - s;
 
@@ -54,3 +56,4 @@ for i=1:6
     l(i) = norm(L(:,i),2); % leg length
     n(:,i) = L(:,i)/l(:,i); % unit vector of leg
 end
+

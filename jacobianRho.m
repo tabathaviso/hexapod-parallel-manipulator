@@ -1,9 +1,13 @@
 % TABATHA VISO - RBE521 - LEGGED ROBOTICS
 % calculate identification matrix
 
-function J = jacobianRho(pose)
+function J = jacobianRho(pose, s, u)
 
-[l n R s] = IK(pose);
+if nargin > 1 % use provided kinematic parameters
+    [l n R s] = IK(pose, s, u);
+else % calculate kinematic parameters
+    [l n R s] = IK(pose);
+end
 
 J = [n(:,1)'*R, -n(:,1)', -1, zeros(1,35);
     zeros(1,7), n(:,2)'*R, -n(:,2)', -1, zeros(1,28);

@@ -1,0 +1,15 @@
+% TABATHA VISO - RBE521 - LEGGED ROBOTICS
+% Finds points within the workspace of a kinematic parallel manipulator
+% Find all the points along the boundary of the workspace
+
+function [boundaryPoints] = workspace_boundary(meshPoints)
+
+% computes convex hull (smallest convex polygon that encloses all points)
+convexHullIndices = convhull(meshPoints(:,1), meshPoints(:,2));
+
+pointsOnConvexHull = meshPoints(convexHullIndices, :);
+
+[V,C] = mesh(points);
+
+edgeIndices = unique(C(:));
+boundaryPoints = V(edgeIndices, :);

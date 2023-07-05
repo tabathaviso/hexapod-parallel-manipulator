@@ -2,7 +2,7 @@
 % Finds points within the workspace of a kinematic parallel manipulator
 % Considering only Z=800mm, horizontal top platform a=b=c=0
 
-function [meshPoints] = workspace(u_nom, s_nom, z)
+function [meshPoints] = workspace(u_nom, s_nom, z, dispFigure)
 
 syms X Y Z
 
@@ -48,25 +48,26 @@ for x = range
 end
 
 % show me how many workspace points I found
-fprintf('There are %d points in the workspace.\n', size(meshPoints,1));
+%fprintf('There are %d configurations in the workspace.\n', size(meshPoints,1));
 
 % add constant z value to workspace points, as well as angles
 meshPoints(:,end+1) = z; 
 meshPoints(:,end+1:end+3) = 0;
 
-% plot
-figure;
-hold on;
-%scatter(u_nom(1,:), u_nom(2,:), 'r', 'DisplayName', 'u\_nom', 'Marker', 'o', 'LineWidth', 1.5);
-%scatter(s_nom(1,:), s_nom(2,:), 'b', 'DisplayName', 's\_nom', 'Marker', 'x', 'LineWidth', 1.5);
-%scatter(spheres(1,:), spheres(2,:), 'g', 'DisplayName', 'centerpoints', 'Marker', 's', 'LineWidth', 1.5);
-cellfun(@(circle) fimplicit(circle, 'LineWidth', 1), circles);
-scatter(meshPoints(:,1),meshPoints(:,2));
-hold off;
-axis equal;
-xlim([-1000, 1000]);
-ylim([-1000, 1000]);
-xlabel('X (mm)');
-ylabel('Y (mm)');
-title('Workspace at z=800mm');
-
+if dispFigure == true
+    % plot
+    figure;
+    hold on;
+    %scatter(u_nom(1,:), u_nom(2,:), 'r', 'DisplayName', 'u\_nom', 'Marker', 'o', 'LineWidth', 1.5);
+    %scatter(s_nom(1,:), s_nom(2,:), 'b', 'DisplayName', 's\_nom', 'Marker', 'x', 'LineWidth', 1.5);
+    %scatter(spheres(1,:), spheres(2,:), 'g', 'DisplayName', 'centerpoints', 'Marker', 's', 'LineWidth', 1.5);
+    cellfun(@(circle) fimplicit(circle, 'LineWidth', 1), circles);
+    scatter(meshPoints(:,1),meshPoints(:,2));
+    hold off;
+    axis equal;
+    xlim([-1000, 1000]);
+    ylim([-1000, 1000]);
+    xlabel('X (mm)');
+    ylabel('Y (mm)');
+    title('Workspace at z=800mm');
+end
