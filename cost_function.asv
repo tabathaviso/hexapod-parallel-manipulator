@@ -11,7 +11,7 @@ function CF = cost_function(x, s_nom, u_nom, lo_nom, p_real, delta_l, R, m)
     e_ij = zeros(m, 6);
     for j = 1:m
         for i = 1:6
-            e_ij(j,i) = (norm((p_real(j,1:3)' + R*s_calc(:,i) - u_calc(:,i)))^2 - (lo_calc(:,i) + delta_l(j,i))^2)^2;
+            e_ij(j,i) = (norm((p_real(j,1:3)' + R*s_calc(:,1) - u_calc(:,1)))^2 - (lo_calc(:,i) + delta_l(j,i))^2)^2;
         end
     end
     
