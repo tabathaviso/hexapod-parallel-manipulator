@@ -2,7 +2,7 @@
 % Finds points within the workspace of a kinematic parallel manipulator
 % Considering only Z=800mm, horizontal top platform a=b=c=0
 
-function [meshPoints, boundaryPoints] = workspace(u_nom, s_nom, z, dispFigure)
+function [meshPoints] = workspace(u_nom, s_nom, z, dispFigure)
 
 syms X Y Z
 
@@ -20,21 +20,19 @@ circles = arrayfun(@(i) (X - spheres(1,i)).^2 + (Y - spheres(2,i)).^2 + (z - sph
 % search range, only looking at every 5mm to save computating time
 range = -1000:5:1000;
 meshPoints = [];
-boundaryPoints = [];
 prevPast = false;
 
 for x = range
     for y = range
         isInWorkspace = false;
-        isOnBoundary = false;
+        isOutsideBoundary = true;
         for i = 1:6
             % check if point is in the workspace (i.e., in every circle)
             if (x - spheres(1,i))^2 + (y - spheres(2,i))^2 + (z - spheres(3,i))^2 - r^2 <= 0
                 isInWorkspace = true;
-                if prevPast == true
-                    isOnBoundary = true;
-                    prevPast = false;
-                end
+                isOutsideBoundary = f
+                if prePast = true
+                    isOutsideBoundary = ;
             else
                 prevPast = true;
             end
@@ -43,9 +41,6 @@ for x = range
         % save workspace points in this list
         if isInWorkspace
             meshPoints = [meshPoints; x, y];
-        end
-        if isOnBoundary
-            boundaryPoints = [boundaryPoints; x, y];
         end
     end
 end
@@ -59,9 +54,6 @@ end
 % add constant z value to workspace points, as well as angles
 meshPoints(:,end+1) = z; 
 meshPoints(:,end+1:end+3) = 0;
-
-boundaryPoints(:,end+1) = z; 
-boundaryPoints(:,end+1:end+3) = 0;
 
 if dispFigure == true
     % plot

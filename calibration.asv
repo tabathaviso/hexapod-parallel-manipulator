@@ -25,21 +25,11 @@ lo_real = [604.4299, 607.2473, 600.4441, 605.9031, 604.5251, 600.0616];
 kinparams_real = [s_real; u_real; lo_real];
 
 %% STEP 1: choose m configurations
-% find all workspace configs but don't show the figure
-list_of_configs = workspace(u_nom, s_nom, 800, false); 
+% find configs on boundary
+[~, all_boundary_points] = workspace(u_nom, s_nom, 800, false);
 
-% find configs on/near the boundary
-%boundary_configs = workspace_boundary(list_of_configs, 0)
-boundary_configs = [-300, 525, 800, 0, 0, 0;
-                    -465, -300, 800, 0, 0, 0;
-                    -505, 200, 800, 0, 0, 0;
-                    320, 435, 800, 0, 0, 0;
-                    500, 245, 800, 0, 0, 0;
-                    600, 10, 800, 0, 0, 0;
-                    545, -165, 800, 0, 0, 0;
-                    -310, -515, 800, 0, 0, 0;
-                    145, -520, 800, 0, 0, 0;
-                    155, 515, 800, 0, 0, 0];
+selectedRowsIndices = randperm()
+
 
 % define the number of boundary configs we will use 
 m = size(boundary_configs,1);
@@ -55,25 +45,28 @@ for j = 1:m
 
     %% STEP 3: implement leg lengths
     % using nominal leg lengths, final "real" ee pose for boundary configs
-    p_real(j,:) = FK(boundary_configs(j,:)', l_nom(j,:), s_real, u_real);
+    delta_l = l_nom - lo_nom;
+    l_real = delta_l + lo_real;
 
-    %% STEP 4: "measure" real leg lengths
-    % find leg lengths for "real" poses of boundary configs
-    l_real(j,:) = IK(p_real(j,:)', s_nom, u_nom);
+    %% STEP 4: obtain real pose
+    p_real(j,:) = FK(boundary_configs(j,:)', l_real(j,:), s_real, u_real);
 end
 
-% finding leg length variations from IK, nominal values 
-delta_l = l_nom - lo_nom;
+% finding leg length variations from IK, nominal values
+delta_s = s_real - s_nom;
+delta_u = u_real - u_nom;
+delta_lo = lo_real - lo_nom;
+delta_kinparams = [delta_s; delta_u; delta_lo];
 
 %% STEP 5: obtain cost function
-objectiveFunc = @(x) cost_function(x, s_nom, u_nom, lo_nom, p_real, delta_l, R, m); 
+CF = @(x) cost_function(x, s_nom, u_nom, lo_nom, p_real, delta_l, R, m); 
 
 %% STEP 6: minimize the cost function
 % Set options for lsqnonlin
-options = optimoptions('lsqnonlin', 'Algorithm', 'levenberg-marquardt');
+options = optimoptions('lsqnonlin', 'Algorithm', 'levenberg-marquardt', 'TolFun', 1e-100000, 'StepTolerance', 1e-100000);
 
 % optimize, using nominal kinematic parameters as initial guess
-[x, resnorm] = lsqnonlin(objectiveFunc, kinparams_nom, [], [], options);
+[x, minimizedCF] = lsqnonlin(CF, delta_kinparams, [], [], options);
 
 % extract optimized variables s_nom, u_nom, and lo_nom
 s_calc = reshape(x(1:numel(s_nom)), size(s_nom));
@@ -81,19 +74,19 @@ u_calc = reshape(x(numel(s_nom)+1:numel(s_nom)+numel(u_nom)), size(u_nom));
 lo_calc = reshape(x(numel(s_nom)+numel(u_nom)+1:end), size(lo_nom));
 
 % print results of calibration
-disp('Calibrated Simulated Real Kinematic Parameters:');
-disp(s_calc);
-disp(u_calc);
-disp(lo_calc);
+% disp('Calibrated Simulated Real Kinematic Parameters:');
+% disp(s_calc);
+% disp(u_calc);
+% disp(lo_calc);
 disp('Minimized Cost Function Value:');
-disp(resnorm);
+disp(minimizedCF);
+
+% plot errors before and after calibration
+num_params = 1:42;
 
 before_calibration = abs(kinparams_real - kinparams_nom);
 after_calibration = abs(kinparams_real - [s_calc; u_calc; lo_calc]);
-
-num_params = 1:42;
-
-before_calibration =,.,mm reshape(before_calibration, 42,1);
+before_calibration = reshape(before_calibration, 42,1);
 after_calibration = reshape(after_calibration, 42, 1);
 
 results = [before_calibration, after_calibration];
@@ -104,3 +97,5 @@ ylabel('Kinematic Parameters');
 zlabel('Error (mm)');
 title('Identification Results');
 legend('Before Calibration', 'After Calibration');
+ylim([1 42]);
+%zlim([0 5]);
