@@ -106,7 +106,7 @@ disp(minimizedCF);
 num_params = 1:42;
 
 before_calibration = abs(kinparams_real - kinparams_nom);
-after_calibration = abs([s_calc; u_calc; lo_calc] - kinparams_nom);
+after_calibration = abs(kinparams_real - [s_calc; u_calc; lo_calc]);
 before_calibration = reshape(before_calibration, 42,1);
 after_calibration = reshape(after_calibration, 42, 1);
 
