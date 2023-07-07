@@ -2,6 +2,7 @@
 % Calibrates a hexapod parallel manipulator 
 
 clear all
+format bank
 
 %% DEFINE GIVENS
 % nominal values of kinematic parameters in mm 
@@ -12,6 +13,7 @@ s_nom = [92.1597, 27.055, -119.2146, -119.2146, 27.055, 92.1597;...
         84.4488, 122.037, 37.58822, -37.5882, -122.037, -84.4488;...
         0,0,0,0,0,0];
 lo_nom = [604.8652, 604.8652, 604.8652, 604.8652, 604.8652, 604.8652];
+
 kinparams_nom = [s_nom; u_nom; lo_nom];
 
 % real values of kinematic parameters in mm
@@ -54,24 +56,43 @@ boundary_configs = [boundary_configs_1; boundary_configs_2; boundary_configs_3; 
 
 % define the number of boundary configs we will use 
 m = size(boundary_configs,1);
-fprintf('There are %d configurations on/near the boundary.\n', m);
+fprintf('Step 1: The calibration will use %d configurations on the workspace boundary:\n', m);
+disp(boundary_configs)
 
-% using the first pose to get R matrix in Euler config
-[l n R s] = IK(boundary_configs(1,:)', s_nom, u_nom);
+% return R matrix
+[~, ~, R, ~] = IK(boundary_configs(1,:)', s_nom, u_nom);
 
 for j = 1:m
     %% STEP 2: use IK to obtain leg lengths 
-    % find leg lengths for boundary configs, also return XYZ Euler R matrix
+    % find leg lengths for boundary configs
     l_nom(j,:)= IK(boundary_configs(j,:)', s_nom, u_nom);
+end
 
-    %% STEP 3: implement leg lengths
-    % using nominal leg lengths, final "real" ee pose for boundary configs
-    delta_l = l_nom - lo_nom;
-    l_real = delta_l + lo_real;
+%% STEP 3: implement leg lengths
+% using nominal leg lengths, final "real" ee pose for boundary configs
+delta_l = l_nom - repmat(lo_nom,m,1);
+l_real = delta_l + repmat(lo_real,m,1);
 
+fprintf('Step 2: The leg length variations obtained from IK are:\n')
+disp(delta_l)
+
+fprintf('Step 3: The implemented leg lengths are:\n')
+disp(l_real)
+
+for j=1:m
     %% STEP 4: obtain real pose
     p_real(j,:) = FK(boundary_configs(j,:)', l_real(j,:), s_real, u_real);
+
+    % find simulated real leg lengths for boundary configs, 
+    l_real_check(j,:)= IK(p_real(j,:)', s_real, u_real);
 end
+
+fprintf('Step 4: The simulated real configurations at the boundary are:\n')
+disp(p_real)
+
+fprintf('Back-Check: The "measured" simulated real leg lengths at the boundary are:\n')
+disp(l_real_check)
+
 
 % finding leg length variations from IK, nominal values
 delta_s = s_real - s_nom;
@@ -84,7 +105,7 @@ CF = @(x) cost_function(x, s_nom, u_nom, lo_nom, p_real, delta_l, R, m);
 
 %% STEP 6: minimize the cost function
 % Set options for lsqnonlin
-options = optimoptions('lsqnonlin', 'Algorithm', 'levenberg-marquardt', 'TolFun', 1e-20, 'StepTolerance', 1e-10, 'MaxFunctionEvaluations', 1e10, 'MaxIterations', 1e6);
+options = optimoptions('lsqnonlin', 'Algorithm', 'levenberg-marquardt', 'TolFun', 1e-40, 'StepTolerance', 1e-20, 'MaxFunctionEvaluations', 1e10, 'MaxIterations', 1e6);
 
 % optimize, using nominal kinematic parameters as initial guess
 [x, minimizedCF] = lsqnonlin(CF, delta_kinparams, [], [], options);
@@ -94,13 +115,15 @@ s_calc = reshape(x(1:numel(s_nom)), size(s_nom));
 u_calc = reshape(x(numel(s_nom)+1:numel(s_nom)+numel(u_nom)), size(u_nom));
 lo_calc = reshape(x(numel(s_nom)+numel(u_nom)+1:end), size(lo_nom));
 
-% print results of calibration
-% disp('Calibrated Simulated Real Kinematic Parameters:');
-% disp(s_calc);
-% disp(u_calc);
-% disp(lo_calc);
-disp('Minimized Cost Function Value:');
-disp(minimizedCF);
+%print results of calibration
+fprintf('Calibration Results: The calibrated kinematic parameters are:\n');
+fprintf('s:\n');
+disp(s_calc);
+fprintf('u:\n');
+disp(u_calc);
+fprintf('l:\n');
+disp(lo_calc);
+fprintf('The minimized Cost Function value is: %d', minimizedCF);
 
 % plot errors before and after calibration
 num_params = 1:42;
