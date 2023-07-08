@@ -37,7 +37,6 @@ while Dp > e
     
     % XYZ Euler Angles
     B = [1, 0, sin(b); 0, cos(a), -sin(a)*cos(b); 0, sin(a), cos(b)*cos(a)]; 
-    
     T = [eye(3), zeros(3,3); zeros(3,3), B]; 
     
     if nargin > 1 % use provided kinematic parameters

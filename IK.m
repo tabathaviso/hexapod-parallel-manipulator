@@ -46,7 +46,6 @@ if nargin < 2 % if the s and u matriced were not provided, calculate
     u = [u1 u2 u3 u4 u5 u6];
 end % else, use provided matrices
 
-%sphere_centers = u - s;
 
 %% EULER ANGLES
 for i=1:6
